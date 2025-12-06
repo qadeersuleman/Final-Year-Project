@@ -1,0 +1,12 @@
+Model Website :
+    Hugging Face
+
+    Dataset --> (dair-ai/emotion)
+
+
+1. Joy
+2. Sadness
+3. anger
+4. Fear
+5. love
+6. surprise

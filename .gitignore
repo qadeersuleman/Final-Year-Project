@@ -1,0 +1,31 @@
+# React Native Ignore
+frontend/**/node_modules/
+frontend/**/build/
+frontend/**/android/.gradle/
+frontend/**/android/app/build/
+frontend/**/ios/Pods/
+frontend/**/.expo/
+frontend/**/.cache/
+
+# Django Ignore
+venv/
+__pycache__/
+*.pyc
+db.sqlite3
+backend/**/media/
+backend/**/staticfiles/
+backend/**/env/
+backend/**/.venv/
+backend/**/__pycache__/
+backend/**/*.pyc
+Backend/**/venv/
+
+
+# System / Editor
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+backend/.env
+frontend/.env
