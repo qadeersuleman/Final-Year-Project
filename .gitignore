@@ -6,6 +6,7 @@ frontend/**/android/app/build/
 frontend/**/ios/Pods/
 frontend/**/.expo/
 frontend/**/.cache/
+frontend/**/app/assets/Videos/
 
 # Django Ignore
 venv/
