@@ -8,6 +8,9 @@ frontend/**/.expo/
 frontend/**/.cache/
 frontend/**/app/assets/Videos/
 Frontend/**/app/assets/Videos/
+*.mp4
+Frontend/MentalHealth/app/assets/Videos/
+
 
 # Django Ignore
 venv/
