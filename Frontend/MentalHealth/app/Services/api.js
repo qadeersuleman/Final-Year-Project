@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { getSession } from '../utils/session';
 
-const API_BASE_URL = 'http://10.16.173.96:8000/api/';
+const API_BASE_URL = 'http://192.168.100.47:8000/api/';
 
 // Create axios instance
 const api = axios.create({

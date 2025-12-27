@@ -35,16 +35,13 @@ class AssessmentAdmin(admin.ModelAdmin):
     list_display = (
         "id",
         "user",
-        "health_goal",
-        "age",
-        "weight",
         "mood",
         "sleep_quality",
         "captured_image",
         "created_at",
     )
-    list_filter = ("mood", "sleep_quality", "health_goal", "created_at")
-    search_fields = ("user__username", "user__email", "health_goal", "mood")
+    list_filter = ("mood", "sleep_quality",  "created_at")
+    search_fields = ("user__username", "user__email", "mood")
     ordering = ("-created_at",)
 
 
@@ -158,7 +155,7 @@ class UserScoreAdmin(admin.ModelAdmin):
         }),
 
         ("Basic Information Scores (10 points)", {
-            "fields": ("age_score", "bmi_score", "sleep_score")
+            "fields": ("sleep_score",)
         }),
 
         ("Mood (10 points)", {
@@ -167,6 +164,7 @@ class UserScoreAdmin(admin.ModelAdmin):
 
         ("Text Emotion (25 points)", {
             "fields": (
+                
                 "text_sentiment_score",
                 "text_emotion_score",
                 "text_negative_keywords_score"
@@ -206,3 +204,20 @@ class UserScoreAdmin(admin.ModelAdmin):
     
     # Date hierarchy for easy navigation
     date_hierarchy = 'created_at'
+
+
+
+
+
+
+
+
+
+
+
+from django.contrib import admin
+from .models import Video
+
+@admin.register(Video)
+class VideoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'video')

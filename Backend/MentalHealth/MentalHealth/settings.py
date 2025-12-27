@@ -23,7 +23,7 @@ DEBUG = True
 
 
 
-New_Host = '10.16.173.96'
+New_Host = '192.168.100.47'
 
 ALLOWED_HOSTS = [
     '10.140.7.50',

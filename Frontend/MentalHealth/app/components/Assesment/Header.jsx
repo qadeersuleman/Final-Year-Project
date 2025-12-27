@@ -24,7 +24,7 @@ const Headers = React.memo(({ onBack, currentStep }) => (
       entering={LightSpeedInRight.duration(800)}
     >
       <Text style={[styles.counterText, { color: Colors.accent.coralDark }]}>
-        {currentStep} of 07
+        {currentStep} of 05
       </Text>
     </Animated.View>
   </Animated.View>

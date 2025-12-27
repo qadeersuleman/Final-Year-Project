@@ -16,7 +16,7 @@ const AuthLoadingScreen = ({ navigation }) => {
         if (!user.hasCompletedProfile) {
           navigation.replace('EditProfile');
         } else if (!user.hasCompletedAssessment) {
-          navigation.replace('HealthGoal'); // Start assessment flow
+          navigation.replace('Mood'); // Start assessment flow
         } else {
           navigation.replace('Home');
         }

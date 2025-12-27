@@ -53,6 +53,9 @@ import ProfileScreen from "./app/Screen/Home/ProfileScreen";
 
 
 import Toast from 'react-native-toast-message';
+import NotificationScreen from "./app/Screen/PushNotification/NotificationScreen";
+import VideoScreen from "./app/Media/VideoScreen";
+import BreathingCompletionScreen from "./app/Screen/BreathingCompletionScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -111,11 +114,12 @@ export default function App() {
         />
 
         {/* Assessment Screens */}
-        <Stack.Screen
+        {/* <Stack.Screen
           name="HealthGoal"
           component={HealthGoal}
           options={{ headerShown: false }}
-        />
+        /> */}
+
         <Stack.Screen
           name="AgeSelection"
           component={AgeSelection}
@@ -127,7 +131,7 @@ export default function App() {
           options={{ headerShown: false }}
         />
         <Stack.Screen
-          name="MoodAssessment"
+          name="Mood"
           component={MoodAssessment}
           options={{ headerShown: false }}
         />
@@ -225,6 +229,21 @@ export default function App() {
         <Stack.Screen
           name="ProfileScreen"
           component={ProfileScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="Notifications"
+          component={NotificationScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="VideoScreen"
+          component={VideoScreen}
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="BreathingCompletion"
+          component={BreathingCompletionScreen}
           options={{ headerShown: false }}
         />
 {/* 

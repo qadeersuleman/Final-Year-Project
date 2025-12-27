@@ -17,7 +17,7 @@ import { getSession } from "../../utils/session";
 
 // Mock session function for testing
 
-const HeaderProfile = () => {
+const HeaderProfile = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -138,7 +138,7 @@ const HeaderProfile = () => {
           <Text style={styles.dateText}>{formattedDate}</Text>
         </Animated.View>
 
-        <TouchableOpacity activeOpacity={0.7}>
+        <TouchableOpacity activeOpacity={0.7} onPress={() => navigation.navigate("Notifications")} >
           <Animated.View
             style={[styles.notificationContainer, notificationStyle]}
           >
@@ -148,7 +148,7 @@ const HeaderProfile = () => {
               color={Colors.text.inverted}
             />
             <Animated.View style={[styles.badge, badgeStyle]}>
-              <Text style={styles.badgeText}>3</Text>
+              <Text style={styles.badgeText}>7</Text>
             </Animated.View>
           </Animated.View>
         </TouchableOpacity>
@@ -156,6 +156,7 @@ const HeaderProfile = () => {
 
       {/* Profile Section */}
       <Animated.View style={[styles.profileContainer, profileStyle]}>
+      
         <Animated.Image
           source={{
             uri:

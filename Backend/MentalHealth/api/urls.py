@@ -4,7 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from . import views
 from Chatbot.views import mental_health_chat as chatbot_view
-from .views import ArticleListView, ArticleDetailView
+from .views import ArticleListView, ArticleDetailView, VideoListAPIView
 
 
 urlpatterns = [
@@ -13,6 +13,8 @@ urlpatterns = [
     path('editprofile/',views.edit_profile, name='edit_profile'),
     path('assessments/', views.create_assessment, name='create_assessment'),
     path('audio-analysis/', views.audio_analysis_view, name='audio-analysis'),
+
+    # path('scores/<int:user_id>/', views.get_user_scores, name='get_user_scores'),
 
     path('csrf-token/', views.get_csrf_token, name='csrf_token'),
 
@@ -25,6 +27,8 @@ urlpatterns = [
     path('articles/<int:pk>/like/', views.like_article, name='like_article'),
     path('articles/<int:pk>/like-status/', views.check_article_like_status, name='check_like_status'),
     path('articles/<int:pk>/view/', views.track_article_view, name='track_article_view'),
+
+    path('videos/', VideoListAPIView.as_view(), name='video-list'),
 
 
 

@@ -19,7 +19,7 @@ import Colors from '../../assets/colors';
 import { Fonts, FontFallbacks } from '../../assets/config/fonts';
 
 const { width, height } = Dimensions.get('window');
-const API_BASE_URL = 'http://172.26.151.96:8000';
+const API_BASE_URL = 'http://10.137.136.96:8000';
 
 // Safe font getter function
 const getFontStyle = (fontKey) => {

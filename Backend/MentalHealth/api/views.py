@@ -401,7 +401,6 @@ def audio_analysis_view(request):
         )
     
 
-
 # assessments/views.py
 from rest_framework import status
 from rest_framework.decorators import api_view
@@ -448,6 +447,11 @@ def create_assessment(request):
     data = request.data.copy()
     data.pop('user', None)
     
+    # Extract text from expression_analysis field
+    user_text = data.get('expression_analysis', '')
+    print(f"Received text for emotion detection from expression_analysis: '{user_text}'")
+    print(f"Text length: {len(user_text)}")
+    
     # Handle captured_image if it's base64
     captured_image_data = data.pop('captured_image', None)
     
@@ -486,9 +490,11 @@ def create_assessment(request):
         with transaction.atomic():
             # Save assessment first
             assessment.save()
+            print(f"Assessment saved with ID: {assessment.id}")
+            print(f"Assessment fields: mood={assessment.mood}, sleep_quality={assessment.sleep_quality}, expression_analysis={assessment.expression_analysis}")
             
             # Calculate and create UserScore with emotion detection
-            user_score = calculate_user_score(assessment, data)
+            user_score = calculate_user_score(assessment)
             user_score.save()
             
             serializer = AssessmentSerializer(assessment)
@@ -500,17 +506,24 @@ def create_assessment(request):
                     'score_details': {
                         'total_score': user_score.total_score,
                         'breakdown': {
-                            'basic_info_score': user_score.age_score + user_score.bmi_score + user_score.sleep_score,
+                            'basic_info_score': user_score.sleep_score,
                             'mood_score': user_score.mood_score,
-                            'text_emotion_score': user_score.text_sentiment_score + user_score.text_emotion_score + user_score.text_negative_keywords_score,
+                            'text_emotion_score': {
+                                'sentiment': user_score.text_sentiment_score,
+                                'emotion': user_score.text_emotion_score,
+                                'negative_keywords': user_score.text_negative_keywords_score,
+                                'total': user_score.text_sentiment_score + user_score.text_emotion_score + user_score.text_negative_keywords_score
+                            },
                             'image_emotion_score': user_score.image_expression_score + user_score.image_fatigue_score + user_score.image_darkcircles_score + user_score.image_stressmicro_score,
                             'voice_emotion_score': user_score.voice_tone_score + user_score.voice_pitch_score + user_score.voice_speed_score + user_score.voice_hesitation_score + user_score.voice_stress_score
-                        }
+                        },
+                        'text_analyzed': user_text[:500] if user_text else "No text provided"
                     }
                 }, 
                 status=status.HTTP_201_CREATED
             )
     except Exception as e:
+        logger.error(f"Error creating assessment: {str(e)}")
         return Response(
             {'error': f'Error creating assessment: {str(e)}'}, 
             status=status.HTTP_400_BAD_REQUEST
@@ -521,19 +534,25 @@ def detect_text_emotion(text):
     Detect emotion from text and return scores for text emotion components
     """
     if not text or not text.strip():
+        print("No text provided for emotion detection or text is empty")
         return {
             "text_sentiment_score": 0,
             "text_emotion_score": 0,
             "text_negative_keywords_score": 0
         }
     
+    print(f"Detecting emotion from text: '{text}'")
+    print(f"Text length: {len(text)}")
+    
     try:
         # Process emotion detection
         result = emotion_pipeline(text)
+        print(f"Emotion detection result: {result}")
         
         # Get primary emotion and score
         primary_emotion = result[0]['label']
         confidence = result[0]['score']
+        print(f"Primary emotion: {primary_emotion}, Confidence: {confidence}")
         
         # 1️⃣ Sentiment Polarity Score (10 points)
         # Negative emotions get higher scores (worse mental health)
@@ -566,10 +585,13 @@ def detect_text_emotion(text):
         # Count negative words in text
         negative_keywords = ['sad', 'angry', 'depressed', 'anxious', 'stress', 
                            'tired', 'exhausted', 'hopeless', 'lonely', 'hurt',
-                           'bad', 'terrible', 'awful', 'hate', 'cant', "can't"]
+                           'bad', 'terrible', 'awful', 'hate', 'cant', "can't",
+                           'worried', 'scared', 'frustrated', 'upset', 'miserable',
+                           'pain', 'suffer', 'alone', 'empty', 'guilty']
         
         text_lower = text.lower()
         negative_count = sum(1 for word in negative_keywords if word in text_lower)
+        print(f"Negative keywords found: {negative_count}")
         
         # Score based on negative word count (0-5 points)
         if negative_count >= 5:
@@ -581,83 +603,99 @@ def detect_text_emotion(text):
         else:
             text_negative_score = 0
         
-        return {
+        scores = {
             "text_sentiment_score": round(text_sentiment_score, 2),
             "text_emotion_score": text_emotion_score,
             "text_negative_keywords_score": text_negative_score
         }
         
+        print(f"Text emotion scores calculated: {scores}")
+        return scores
+        
     except Exception as e:
         logger.error(f"Error in emotion detection: {str(e)}")
+        print(f"Error in emotion detection: {str(e)}")
         return {
             "text_sentiment_score": 0,
             "text_emotion_score": 0,
             "text_negative_keywords_score": 0
         }
 
-def calculate_user_score(assessment, data):
+def calculate_user_score(assessment):
     """
     Calculate UserScore based on assessment data with emotion detection
+    
+    Args:
+        assessment: The saved Assessment object
     """
     user_score = UserScore(user=assessment.user)
     
-    # 1️⃣ Basic Info (Total 10 points)
-    # Age score (2 points)
-    age = data.get('age', 0)
-    if age > 20:
-        user_score.age_score = 2
-    else:
-        user_score.age_score = 1
+    print(f"=== Calculating score for assessment ID: {assessment.id} ===")
     
-    # BMI/Weight score (4 points)
-    weight = data.get('weight', 0)
-    if weight > 50:
-        user_score.bmi_score = 2
-    else:
-        user_score.bmi_score = 2
+    # 1️⃣ Sleep score (4 points) - get from assessment object
+    sleep_quality = getattr(assessment, 'sleep_quality', '')
+    print(f"Sleep quality from assessment: '{sleep_quality}'")
     
-    # Sleep score (4 points)
-    sleep_quality = data.get('sleep_quality', '').lower()
-    if sleep_quality == 'excellent':
+    if sleep_quality and sleep_quality.lower() == 'excellent':
         user_score.sleep_score = 4
-    elif sleep_quality == 'good':
+    elif sleep_quality and sleep_quality.lower() == 'good':
         user_score.sleep_score = 3
-    elif sleep_quality == 'fair':
+    elif sleep_quality and sleep_quality.lower() == 'fair':
         user_score.sleep_score = 2
-    elif sleep_quality == 'worst':
+    elif sleep_quality and sleep_quality.lower() == 'worst':
         user_score.sleep_score = 1
     else:
         user_score.sleep_score = 0
     
+    print(f"Sleep score: {user_score.sleep_score}")
+    
     # 2️⃣ Mood Sticker (Total 10 points)
-    mood = data.get('mood', '').lower()
-    if mood == 'happy':
+    mood = getattr(assessment, 'mood', '')
+    print(f"Mood from assessment: '{mood}'")
+    
+    if mood and mood.lower() == 'happy':
         user_score.mood_score = 0
         user_score.mood_label = 'Happy'
-    elif mood == 'neutral':
+    elif mood and mood.lower() == 'neutral':
         user_score.mood_score = 2
         user_score.mood_label = 'Neutral'
-    elif mood == 'low':
+    elif mood and mood.lower() == 'low':
         user_score.mood_score = 5
         user_score.mood_label = 'Low'
-    elif mood == 'sad':
+    elif mood and mood.lower() == 'sad':
         user_score.mood_score = 8
         user_score.mood_label = 'Sad'
-    elif mood == 'angry':
+    elif mood and mood.lower() == 'angry':
         user_score.mood_score = 10
         user_score.mood_label = 'Angry'
     else:
         user_score.mood_score = 0
         user_score.mood_label = 'Unknown'
     
+    print(f"Mood score: {user_score.mood_score}, Mood label: {user_score.mood_label}")
+    
     # 3️⃣ Text Emotion Detection (Total 25 points)
-    # Get text from assessment (assuming you have a text field)
-    user_text = data.get('user_text', '') or data.get('text', '') or data.get('description', '')
+    # Get text from expression_analysis field
+    user_text = getattr(assessment, 'expression_analysis', '')
+    print(f"Text from assessment.expression_analysis: '{user_text}'")
+    print(f"Text type: {type(user_text)}, Length: {len(user_text) if user_text else 0}")
+    
+
+
+    if user_text is None:
+        user_text = ''
+    else:
+        user_score.text_label = user_text[:50]  # Store a snippet of the text
     
     text_emotion_scores = detect_text_emotion(user_text)
     user_score.text_sentiment_score = text_emotion_scores['text_sentiment_score']
     user_score.text_emotion_score = text_emotion_scores['text_emotion_score']
     user_score.text_negative_keywords_score = text_emotion_scores['text_negative_keywords_score']
+    
+    print(f"Text emotion scores assigned to user_score:")
+    print(f"  Sentiment: {user_score.text_sentiment_score}")
+    print(f"  Emotion: {user_score.text_emotion_score}")
+    print(f"  Negative keywords: {user_score.text_negative_keywords_score}")
     
     # 4️⃣ Image Emotion Recognition (Total 25 points) - Currently set to 0
     user_score.image_expression_score = 0
@@ -674,14 +712,19 @@ def calculate_user_score(assessment, data):
     
     # Calculate total score
     user_score.total_score = (
-        user_score.age_score + user_score.bmi_score + user_score.sleep_score +  # Basic Info (10)
+        user_score.sleep_score +  # Basic Info (10)
         user_score.mood_score +  # Mood (10)
         user_score.text_sentiment_score + user_score.text_emotion_score + user_score.text_negative_keywords_score +  # Text Emotion (25)
         user_score.image_expression_score + user_score.image_fatigue_score + user_score.image_darkcircles_score + user_score.image_stressmicro_score +  # Image Emotion (25)
         user_score.voice_tone_score + user_score.voice_pitch_score + user_score.voice_speed_score + user_score.voice_hesitation_score + user_score.voice_stress_score  # Voice Emotion (30)
     )
     
+    print(f"Total score calculated: {user_score.total_score}")
+    print(f"=== Score calculation complete ===")
     return user_score
+
+
+
 
 
 
@@ -866,3 +909,21 @@ def get_article_views(request, pk):
             'success': False,
             'error': str(e)
         }, status=400)
+    
+
+
+
+
+
+
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .models import Video
+from .serializers import VideoSerializer
+
+class VideoListAPIView(APIView):
+    def get(self, request):
+        videos = Video.objects.all()
+        serializer = VideoSerializer(videos, many=True, context={'request': request})
+        return Response(serializer.data)

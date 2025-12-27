@@ -38,7 +38,7 @@ export default function SleepQualitySlider({route, navigation }) {
   const isAnimating = useRef(false);
 
   // All Assesment Screens have same header and title
-  const {health_goal ,age, weight, mood } = route.params;
+  const {mood } = route.params;
 
   useEffect(() => {
     // Initialize the selected card animation
@@ -129,7 +129,7 @@ export default function SleepQualitySlider({route, navigation }) {
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: Colors.neutrals.background }]}>
-      <Headers onBack={() => navigation.goBack()} currentStep="5" />   
+      <Headers onBack={() => navigation.goBack()} currentStep="2" />   
         {/* In last just find sleep quality as worst fair good or excellent */}
           
       <Title>How would you rate your sleep quality?</Title>
@@ -243,9 +243,6 @@ export default function SleepQualitySlider({route, navigation }) {
 
       <AppButton onPress={() => navigation.navigate('CameraScreen', 
         {
-          health_goal : health_goal,
-          weight : weight,
-          age : age,
           mood : mood,
           sleep_quality: sleepLevels[selectedIndex].label
         }

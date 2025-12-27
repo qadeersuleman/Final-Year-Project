@@ -1,19 +1,27 @@
 from rest_framework import serializers
 from .models import Assessment, Article, ArticleLike, ArticleRating, ArticleView
 
-class AssessmentSerializer(serializers.ModelSerializer):
+from rest_framework import serializers
+from .models import Assessment, UserScore
 
+class AssessmentSerializer(serializers.ModelSerializer):
     captured_image_url = serializers.SerializerMethodField()
+    
     class Meta:
         model = Assessment
-        fields = '__all__'
-        read_only_fields = ['id', 'created_at', 'user']
+        fields = ['id', 'user', 'mood', 'sleep_quality', 'expression_analysis', 'captured_image', 'captured_image_url', 'created_at']
+        read_only_fields = ['id', 'created_at', 'captured_image_url']
     
     def get_captured_image_url(self, obj):
         if obj.captured_image:
             return obj.captured_image.url
         return None
 
+
+class UserScoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserScore
+        fields = '__all__'
 
 
 from .models import CustomUser   # ya jo tumhara user model hai
@@ -80,3 +88,20 @@ class ArticleSerializer(serializers.ModelSerializer):
 
 
 
+
+
+
+
+from rest_framework import serializers
+from .models import Video
+
+class VideoSerializer(serializers.ModelSerializer):
+    video_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Video
+        fields = ['id', 'title', 'description', 'video_url']
+
+    def get_video_url(self, obj):
+        request = self.context.get('request')
+        return request.build_absolute_uri(obj.video.url)

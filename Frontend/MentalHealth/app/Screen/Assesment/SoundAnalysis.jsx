@@ -345,7 +345,7 @@ const sendToBackend = async (recordingUri) => {
 
   return (
     <View style={styles.container}>
-      <Headers onBack={() => navigation.goBack()} currentStep="7" />
+      <Headers onBack={() => navigation.goBack()} currentStep="5" />
 
       <View style={styles.titleContainer}>
         <Title>Voice Pattern Analysis</Title>

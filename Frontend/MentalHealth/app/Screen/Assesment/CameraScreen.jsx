@@ -20,7 +20,7 @@ const { width, height } = Dimensions.get("window");
 
 export default function ModernCamera({ navigation, route }) {
   // Get assessment data from previous screens
-  const { health_goal, age, weight, mood, sleep_quality } = route.params;
+  const { mood, sleep_quality } = route.params;
 
   // Permissions state
   const [cameraPermissions, requestCameraPermissions] = useCameraPermissions();
@@ -108,10 +108,7 @@ const captureImage = async () => {
       console.log('Base64 image captured, length:', photo.base64?.length);
 
       // Navigate with base64 data
-      navigation.navigate('ExpressionAnalysis', {
-        health_goal,
-        age,
-        weight, 
+      navigation.navigate('ExpressionAnalysis', { 
         mood,
         sleep_quality,
         captured_image: photo.base64, // Send base64 string

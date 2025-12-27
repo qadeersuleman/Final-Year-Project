@@ -457,6 +457,8 @@ const LoginScreen = () => {
             <Text style={styles.OR}>OR CONTINUE WITH</Text>
 
             {/* Social Icons */}
+
+
             <Animated.View
               style={[
                 styles.socialIcons,
@@ -500,6 +502,8 @@ const LoginScreen = () => {
                 />
               </TouchableOpacity>
             </Animated.View>
+
+
 
             {/* Sign Up Link */}
             <View style={styles.footer}>

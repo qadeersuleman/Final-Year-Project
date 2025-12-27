@@ -1,3 +1,4 @@
+// components/EditProfile.jsx
 import React, { useState, useRef, useEffect } from "react";
 import {
   View,
@@ -15,6 +16,7 @@ import {
   Keyboard,
   ScrollView,
   Modal,
+  SafeAreaView,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import {
@@ -28,13 +30,17 @@ import * as Yup from "yup";
 import LottieView from "lottie-react-native";
 import * as ImagePicker from "expo-image-picker";
 import DateTimePicker from "@react-native-community/datetimepicker";
+// import Svg, { Circle } from "react-native-svg";
+import * as Haptics from "expo-haptics";
 
 import { getSession, saveSession } from "../../utils/session";
 import { updateUserProfile } from "../../Services/api";
 import Screen from "../../components/Screen";
 import Colors from "../../assets/colors";
+import SuccessModal from "../../components/SuccessModal";
 
 const { width, height } = Dimensions.get("window");
+const isSmallDevice = width < 375;
 
 const EditProfile = ({ navigation, route }) => {
   const { username } = route.params || {};
@@ -45,8 +51,10 @@ const EditProfile = ({ navigation, route }) => {
   const [genderModalVisible, setGenderModalVisible] = useState(false);
   const [countryModalVisible, setCountryModalVisible] = useState(false);
   const [keyboardStatus, setKeyboardStatus] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [modalMessage, setModalMessage] = useState('');
 
-  // Enhanced Animation values
+  // Animation refs - Fixed to avoid conflicts
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideUpAnim = useRef(new Animated.Value(50)).current;
   const buttonScale = useRef(new Animated.Value(1)).current;
@@ -55,8 +63,6 @@ const EditProfile = ({ navigation, route }) => {
   const modalOpacity = useRef(new Animated.Value(0)).current;
   const countryModalScale = useRef(new Animated.Value(0.8)).current;
   const countryModalOpacity = useRef(new Animated.Value(0)).current;
-
-  // Particle animation refs
   const particle1 = useRef(new Animated.Value(0)).current;
   const particle2 = useRef(new Animated.Value(0)).current;
 
@@ -79,32 +85,32 @@ const EditProfile = ({ navigation, route }) => {
   ];
 
   useEffect(() => {
-    // Enhanced entrance animations
+    // Entrance animations using only timing to avoid conflicts
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 1000,
+        duration: 800,
         useNativeDriver: true,
         easing: Easing.out(Easing.cubic),
       }),
       Animated.timing(slideUpAnim, {
         toValue: 0,
-        duration: 1200,
+        duration: 1000,
         useNativeDriver: true,
-        easing: Easing.out(Easing.back(1.5)),
+        easing: Easing.out(Easing.cubic),
       }),
-      Animated.stagger(150, [
-        Animated.timing(particle1, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-        Animated.timing(particle2, {
-          toValue: 1,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ]),
+      Animated.timing(particle1, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+        delay: 200,
+      }),
+      Animated.timing(particle2, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+        delay: 400,
+      }),
     ]).start();
 
     // Keyboard listeners
@@ -130,7 +136,7 @@ const EditProfile = ({ navigation, route }) => {
         toValue: 1,
         duration: 300,
         useNativeDriver: true,
-        easing: Easing.out(Easing.back(1.5)),
+        easing: Easing.out(Easing.back(1)),
       }),
       Animated.timing(modalOpacity, {
         toValue: 1,
@@ -162,7 +168,7 @@ const EditProfile = ({ navigation, route }) => {
         toValue: 1,
         duration: 300,
         useNativeDriver: true,
-        easing: Easing.out(Easing.back(1.5)),
+        easing: Easing.out(Easing.back(1)),
       }),
       Animated.timing(countryModalOpacity, {
         toValue: 1,
@@ -228,7 +234,7 @@ const EditProfile = ({ navigation, route }) => {
   const handleSubmit = async (values) => {
     setIsSubmitting(true);
     try {
-      // Enhanced button animation
+      // Button animation
       Animated.sequence([
         Animated.timing(buttonScale, {
           toValue: 0.95,
@@ -257,7 +263,6 @@ const EditProfile = ({ navigation, route }) => {
       formData.append("gender", values.gender);
       formData.append("date_of_birth", values.birthDate.toISOString().split("T")[0]);
       
-      // Combine country code and phone number
       const fullPhoneNumber = `${values.countryCode}${values.phoneNumber}`;
       formData.append("phone_number", fullPhoneNumber);
 
@@ -286,14 +291,22 @@ const EditProfile = ({ navigation, route }) => {
       };
       await saveSession(updatedUser);
 
-      Alert.alert("Success", "Profile updated successfully!");
-      navigation.navigate("HealthGoal");
+      // ✅ Show success modal instead of Alert
+      setModalMessage('Your profile has been updated successfully!');
+      setIsModalVisible(true);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
     } catch (error) {
       console.error("Profile update error:", error.message);
       Alert.alert("Error", error.message || "Failed to update profile. Please try again.");
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleRedirectToHealthGoal = () => {
+    navigation.navigate('Mood');
   };
 
   const formatDate = (date) => {
@@ -327,7 +340,6 @@ const EditProfile = ({ navigation, route }) => {
     />
   );
 
-  // Gender Option Component
   const GenderOption = ({ option, onSelect, isSelected }) => (
     <TouchableOpacity
       style={[
@@ -358,7 +370,6 @@ const EditProfile = ({ navigation, route }) => {
     </TouchableOpacity>
   );
 
-  // Country Option Component
   const CountryOption = ({ option, onSelect, isSelected }) => (
     <TouchableOpacity
       style={[
@@ -381,7 +392,6 @@ const EditProfile = ({ navigation, route }) => {
     </TouchableOpacity>
   );
 
-  // Gender Modal Component
   const GenderModal = ({ 
     visible, 
     onClose, 
@@ -428,7 +438,6 @@ const EditProfile = ({ navigation, route }) => {
     </Modal>
   );
 
-  // Country Modal Component
   const CountryModal = ({ 
     visible, 
     onClose, 
@@ -482,7 +491,7 @@ const EditProfile = ({ navigation, route }) => {
         style={{ flex: 1, backgroundColor: Colors.background.main }}
         keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
       >
-        <View style={{ flex: 1 }}>
+        <SafeAreaView style={{ flex: 1 }}>
           {/* Animated Background Elements */}
           <View style={styles.backgroundContainer}>
             <FloatingParticle
@@ -527,6 +536,7 @@ const EditProfile = ({ navigation, route }) => {
               style={styles.scrollContainer}
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.scrollContent}
+              keyboardShouldPersistTaps="handled"
             >
               <Animated.View
                 style={[
@@ -537,7 +547,7 @@ const EditProfile = ({ navigation, route }) => {
                   },
                 ]}
               >
-                {/* Enhanced Profile Picture */}
+                {/* Profile Picture */}
                 <View style={styles.profilePictureContainer}>
                   <Animated.View style={{ transform: [{ scale: imageScale }] }}>
                     <TouchableOpacity
@@ -619,26 +629,11 @@ const EditProfile = ({ navigation, route }) => {
                           />
                         </View>
                         {touched.fullName && errors.fullName && (
-                          <Animated.Text 
-                            style={[
-                              styles.error,
-                              {
-                                opacity: fadeAnim,
-                                transform: [{
-                                  translateX: fadeAnim.interpolate({
-                                    inputRange: [0, 1],
-                                    outputRange: [-10, 0]
-                                  })
-                                }]
-                              }
-                            ]}
-                          >
-                            {errors.fullName}
-                          </Animated.Text>
+                          <Text style={styles.error}>{errors.fullName}</Text>
                         )}
                       </View>
 
-                      {/* Enhanced Gender Selection */}
+                      {/* Gender Selection */}
                       <View style={styles.inputGroup}>
                         <Text style={styles.label}>Gender</Text>
                         <TouchableOpacity
@@ -721,11 +716,10 @@ const EditProfile = ({ navigation, route }) => {
                         )}
                       </View>
 
-                      {/* Enhanced Phone Number with Country Code */}
+                      {/* Phone Number */}
                       <View style={styles.inputGroup}>
                         <Text style={styles.label}>Phone Number</Text>
                         <View style={styles.phoneInputContainer}>
-                          {/* Country Code Selector */}
                           <TouchableOpacity
                             style={styles.countryCodeSelector}
                             onPress={openCountryModal}
@@ -742,7 +736,6 @@ const EditProfile = ({ navigation, route }) => {
                             />
                           </TouchableOpacity>
 
-                          {/* Phone Number Input */}
                           <View style={styles.phoneNumberInput}>
                             <Ionicons
                               name="call-outline"
@@ -757,7 +750,6 @@ const EditProfile = ({ navigation, route }) => {
                               keyboardType="phone-pad"
                               value={values.phoneNumber}
                               onChangeText={(text) => {
-                                // Only allow numbers and enforce max length
                                 const numbersOnly = text.replace(/[^0-9]/g, '');
                                 if (numbersOnly.length <= maxPhoneLength) {
                                   handleChange("phoneNumber")(numbersOnly);
@@ -774,7 +766,7 @@ const EditProfile = ({ navigation, route }) => {
                         )}
                       </View>
 
-                      {/* Enhanced Save Button */}
+                      {/* Save Button */}
                       <Animated.View
                         style={[
                           { transform: [{ scale: buttonScale }] },
@@ -834,7 +826,6 @@ const EditProfile = ({ navigation, route }) => {
                         selectedCountry={values.countryCode}
                         onCountrySelect={(country) => {
                           setFieldValue("countryCode", country.code);
-                          // Clear phone number when country changes to avoid invalid lengths
                           setFieldValue("phoneNumber", "");
                           closeCountryModal();
                         }}
@@ -845,7 +836,20 @@ const EditProfile = ({ navigation, route }) => {
               </Animated.View>
             </ScrollView>
           </Animated.View>
-        </View>
+
+          {/* Success Modal */}
+          <SuccessModal
+            isVisible={isModalVisible}
+            onClose={() => setIsModalVisible(false)}
+            title="Profile Updated!"
+            message={modalMessage || "Your profile has been updated successfully!"}
+            redirectTo="HealthGoal"
+            autoRedirectDuration={5000}
+            onRedirect={handleRedirectToHealthGoal}
+            showConfetti={true}
+            animationSource={require('../../assets/json/Blue Checkmark.json')}
+          />
+        </SafeAreaView>
       </KeyboardAvoidingView>
     </Screen>
   );
@@ -878,7 +882,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingHorizontal: 25,
-    paddingTop: 10,
+    paddingTop: Platform.OS === 'ios' ? 10 : 40,
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
     shadowColor: Colors.brand.primary,
@@ -902,7 +906,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: Colors.text.inverted,
     fontWeight: "bold",
-    fontFamily: 'System',
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
   },
   headerSubtitle: {
     fontSize: 14,
@@ -989,7 +993,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "600",
     color: Colors.text.primary,
-    fontFamily: 'System',
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
   },
   inputContainer: {
     flexDirection: "row",
@@ -1069,7 +1073,7 @@ const styles = StyleSheet.create({
     height: '100%',
     color: Colors.text.primary,
     fontSize: 16,
-    fontFamily: 'System',
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
     fontWeight: '500',
   },
   genderTextContainer: {
@@ -1091,7 +1095,7 @@ const styles = StyleSheet.create({
     height: "100%",
     color: Colors.text.primary,
     fontSize: 16,
-    fontFamily: 'System',
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
     fontWeight: '500',
   },
   dateTextContainer: {
@@ -1148,7 +1152,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: Colors.text.inverted,
     fontWeight: "700",
-    fontFamily: 'System',
+    fontFamily: Platform.select({ ios: 'System', android: 'Roboto' }),
   },
   error: {
     color: Colors.status.error,
@@ -1157,7 +1161,6 @@ const styles = StyleSheet.create({
     marginLeft: 12,
     fontWeight: '500',
   },
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: Colors.ui.overlay,
@@ -1167,6 +1170,7 @@ const styles = StyleSheet.create({
   },
   modalContainer: {
     width: '90%',
+    maxWidth: 400,
     backgroundColor: Colors.background.card,
     borderRadius: 24,
     padding: 24,

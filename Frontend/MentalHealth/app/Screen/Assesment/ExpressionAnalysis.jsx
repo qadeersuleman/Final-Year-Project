@@ -26,12 +26,9 @@ const ExpressionAnalysis = ({ route, navigation }) => {
   const maxCharLimit = 250;
 
   // Get assessment data from previous screens
-  const { health_goal, age, weight, mood, sleep_quality, captured_image, image_format } = route.params;
+  const {  mood, sleep_quality, captured_image, image_format } = route.params;
   
-  // Debug logging
-  console.log("health_goal:", health_goal);
-  console.log("age:", age);
-  console.log("weight:", weight);
+
   console.log("mood:", mood);
   console.log("sleep_quality:", sleep_quality);
   console.log("Image format:", image_format);
@@ -62,9 +59,6 @@ const ExpressionAnalysis = ({ route, navigation }) => {
     // Prepare assessment data
     const assessmentData = {
       user: userId,
-      health_goal,
-      age: parseInt(age),
-      weight: parseFloat(weight),
       mood,
       sleep_quality,
       expression_analysis: text,
@@ -91,9 +85,6 @@ const ExpressionAnalysis = ({ route, navigation }) => {
     try {
       await submitAssessment(assessmentData);
       navigation.navigate("SoundAnalysis", {
-        health_goal,
-        weight,
-        age,
         mood,
         sleep_quality,
         captured_image,
@@ -114,7 +105,7 @@ const ExpressionAnalysis = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Headers onBack={() => navigation.goBack()} currentStep="6" />
+      <Headers onBack={() => navigation.goBack()} currentStep="4" />
 
       {/* Display Image */}
       <View style={styles.imageContainer}>
